@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Fractal App</title>
+    <style>
+        .image {
+            display: block;
+            max-height: 25rem;
+            width: 49%;
+            float: left;
+            border: 2px solid gray;
+            margin-right: 2px;
+        }
+
+        .separator {
+            clear: both;
+        }
+
+        body {
+            margin: 0px 0px;
+            padding: 0px 0px;
+        }
+
+        .vidContainer {
+            margin: 0px auto;
+            border: 10px #333 solid;
+        }
+
+        .videoElem {
+            background-color: #666;
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="file" id="uploader" />
+    <button id="close">Shutdown app</button>
+    <br />
+
+    <h2>
+        Color View
+    </h2>
+    <form id="colorViewRadioForm">
+        <input type="radio" name="colorView" value="norm" id="normal" checked="checked">
+        <label for="normal">Normal</label> <br>
+        <input type="radio" name="colorView" value="ro" id="redOnly">
+        <label for="redOnly">Red Only</label> <br>
+        <input type="radio" name="colorView" value="go" id="greenOnly">
+        <label for="greenOnly">Green Only</label> <br>
+        <input type="radio" name="colorView" value="bo" id="blueOnly">
+        <label for="blueOnly">Blue Only</label> <br>
+        <input type="radio" name="colorView" value="sc" id="shiftingColors">
+        <label for="shiftingColors">Shifting</label> <br>
+    </form>
+
+    <h2>
+        Images
+    </h2>
+    <div class="separator">Results:</div>
+    <div>
+        <image id="sourceImg" class="image" />
+        <image id="targetImg" class="image" />
+    </div>
+
+    <h2>
+        Video
+    </h2>
+
+    <p class="centerImageNoBorder">
+        <div class="vidContainer" id="videoContainer" style="width: 500px; height: 375px;">
+            <video autoplay="true" class="vidElem" id="videoElement" width=500 height=375></video>
+        </div>
+        <div class="vidContainer" id="canvasContainer" style="width: 500px; height: 375px;">
+            <canvas class="vidElem" id="videoCanvas" width=500 height=375></canvas>
+        </div>
+    </p>
+
+    <h3>
+        Debug
+    </h3>
+    <div id="status"></div>
+
+
+    <script src="wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+        // memoryBytes is an Uint8Array pointing to the webassembly linear memory.
+        let memoryBytes;
+        let mod, inst, bytes;
+        let imageType;
+        document.getElementById('status').innerText = "Initializing wasm...";
+        WebAssembly.instantiateStreaming(
+            fetch("wonder.wasm", { cache: 'no-cache' }), go.importObject).then((result) => {
+                mod = result.module;
+                inst = result.instance;
+                memoryBytes = new Uint8Array(inst.exports.mem.buffer)
+                document.getElementById('status').innerText = "Initialization complete.";
+                run();
+            }).catch((err) => {
+                console.error(err);
+            });
+
+        async function run() {
+            await go.run(inst);
+        }
+
+        // displayImage takes the pointer to the target image in the wasm linear memory
+        // and its length. Gets the resulting byte slice and creates an image blob.
+        function displayImage(buf) {
+            let blob = new Blob([buf], { 'type': imageType });
+            document.getElementById('targetImg').src = URL.createObjectURL(blob);
+        }
+
+        document.getElementById('uploader').addEventListener('change', function () {
+            let reader = new FileReader();
+            reader.onload = (ev) => {
+                bytes = new Uint8Array(ev.target.result);
+                loadImage(bytes);
+                let blob = new Blob([bytes], { 'type': imageType });
+                document.getElementById("sourceImg").src = URL.createObjectURL(blob);
+            };
+            imageType = this.files[0].type;
+            reader.readAsArrayBuffer(this.files[0]);
+        });
+
+        var video = document.querySelector("#videoElement");
+
+        if (navigator.mediaDevices.getUserMedia) {
+            // var front = false;
+            // document.getElementById('flip-button').onclick = function() { front = !front; };
+
+            // var constraints = { video: { facingMode: (front? "user" : "environment") } };
+            // navigator.mediaDevices.getUserMedia(constraints)
+            // navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function (stream) {
+                    processVideoStream(stream)
+                    video.srcObject = stream;
+                })
+                .catch(function (err0r) {
+                    console.log("error while loading webcame video");
+                });
+        }
+    </script>
+</body>
+
+</html>
