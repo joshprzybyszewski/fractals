@@ -69,7 +69,6 @@ func (w *FractalApp) setupRunCb() {
 			Call("getElementById", "numSteps").
 			Get("value")
 
-		// TODO I think there's a better way to get the value in an int for nSteps
 		nSteps, err := strconv.Atoi(v.String())
 		if err != nil {
 			w.log(err.Error())
