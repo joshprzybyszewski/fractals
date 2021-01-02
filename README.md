@@ -2,9 +2,9 @@
 
 fun weekend project regarding the dragon fractal
 
-### App
+### Demo
 
-<iframe src="./index.html"></iframe>
+![dragonfractal10](./demos/dragonfractal10.gif)
 
 ### Inspiration
 
