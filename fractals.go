@@ -40,7 +40,7 @@ func (w *FractalApp) Start() {
 		Call("getElementById", "close").
 		Call("addEventListener", "click", w.shutdownCb)
 
-	w.rebuildDragon(8192)
+	w.rebuildDragon(10)
 
 	<-w.done
 	w.log("Shutting down app")
@@ -73,7 +73,7 @@ func (w *FractalApp) setupRunCb() {
 		nSteps, err := strconv.Atoi(v.String())
 		if err != nil {
 			w.log(err.Error())
-			nSteps = 16
+			nSteps = 4
 		}
 		w.rebuildDragon(uint64(nSteps))
 
@@ -81,11 +81,19 @@ func (w *FractalApp) setupRunCb() {
 	})
 }
 
-func (w *FractalApp) rebuildDragon(nSteps uint64) {
-	w.log(fmt.Sprintf("building path with %v steps...", nSteps))
+func twoRaised(n uint64) uint64 {
+	res := uint64(1)
+	for i := uint64(1); i < n; i++ {
+		res *= 2
+	}
+	return res
+}
+
+func (w *FractalApp) rebuildDragon(n uint64) {
+	w.log(fmt.Sprintf("building path with 2^%v steps...", n))
 
 	// update the path
-	path, maxX, maxY := drawing.New(2).BuildPath(nSteps)
+	path, maxX, maxY := drawing.New(2).BuildPath(twoRaised(n))
 
 	// find the svg and set the viewBox
 	vb := fmt.Sprintf("0 0 %d %d", int(maxX), int(maxY))
@@ -98,5 +106,5 @@ func (w *FractalApp) rebuildDragon(nSteps uint64) {
 		Call("getElementById", "pathID").
 		Call("setAttribute", "d", path)
 
-	w.log(fmt.Sprintf("building path with %v steps...Complete!", nSteps))
+	w.log(fmt.Sprintf("building path with 2^%v steps...Complete!", n))
 }

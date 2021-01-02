@@ -1,7 +1,10 @@
 package drawing
 
 import (
+	"fmt"
+	"io"
 	"strconv"
+	"strings"
 
 	"github.com/joshprzybyszewski/fractals/generator"
 )
@@ -24,8 +27,9 @@ func New(delta int) PathBuilder {
 }
 
 func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
-	// TODO come up with a better way to build a string
-	path := ``
+	var b strings.Builder
+	b.Grow((3 + len(s.deltaStr) + 1) * int(numSteps))
+
 	dir := East
 
 	curPoint := point{}
@@ -33,9 +37,8 @@ func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
 	maxPoint := curPoint
 
 	for step := uint64(1); step <= numSteps; step++ {
-		var pDelta string
-		pDelta, curPoint = s.nextPath(dir, curPoint)
-		path += pDelta + ` `
+		curPoint = s.nextPath(&b, dir, curPoint)
+		fmt.Fprint(&b, ` `)
 
 		minPoint = minPoints(minPoint, curPoint)
 		maxPoint = maxPoints(maxPoint, curPoint)
@@ -46,21 +49,29 @@ func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
 
 	initialMove := `M ` + strconv.Itoa(int(-minPoint.x)+paddingX) + ` ` + strconv.Itoa(int(-minPoint.y)+paddingY) + ` `
 
-	return initialMove + path, maxPoint.x - minPoint.x + (2 * paddingX), maxPoint.y - minPoint.y + (2 * paddingY)
+	return initialMove + b.String(), maxPoint.x - minPoint.x + (2 * paddingX), maxPoint.y - minPoint.y + (2 * paddingY)
 }
 
-func (s svgPathBuilder) nextPath(c Cardinal, curPoint point) (string, point) {
+func (s svgPathBuilder) nextPath(b io.Writer, c Cardinal, curPoint point) point {
 
 	switch c {
 	case North:
-		return `v -` + s.deltaStr, curPoint.v(-s.delta)
+		fmt.Fprint(b, `v -`)
+		fmt.Fprint(b, s.deltaStr)
+		return curPoint.v(-s.delta)
 	case East:
-		return `h ` + s.deltaStr, curPoint.h(s.delta)
+		fmt.Fprint(b, `h `)
+		fmt.Fprint(b, s.deltaStr)
+		return curPoint.h(s.delta)
 	case South:
-		return `v ` + s.deltaStr, curPoint.v(s.delta)
+		fmt.Fprint(b, `v `)
+		fmt.Fprint(b, s.deltaStr)
+		return curPoint.v(s.delta)
 	case West:
-		return `h -` + s.deltaStr, curPoint.h(-s.delta)
+		fmt.Fprint(b, `h -`)
+		fmt.Fprint(b, s.deltaStr)
+		return curPoint.h(-s.delta)
 	}
 
-	return ``, curPoint
+	return curPoint
 }
