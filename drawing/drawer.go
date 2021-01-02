@@ -1,40 +1,60 @@
 package drawing
 
 import (
+	"strconv"
+
 	"github.com/joshprzybyszewski/fractals/generator"
 )
 
-const (
-	startX = `100`
-	startY = `100`
-	delta  = `10`
-)
+type svgPathBuilder struct {
+	delta    int
+	deltaStr string
+}
 
-func BuildPath(numSteps uint64) string {
-	path := `M ` + startX + ` ` + startY + ` `
+func New(delta int) PathBuilder {
+	return svgPathBuilder{
+		delta:    delta,
+		deltaStr: strconv.Itoa(delta),
+	}
+}
+
+func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
+	path := ``
 	dir := East
 
+	curPoint := point{}
+	minPoint := curPoint
+	maxPoint := curPoint
+
 	for step := uint64(1); step <= numSteps; step++ {
-		path += toPath(dir) + ` `
+		var pDelta string
+		pDelta, curPoint = s.nextPath(dir, curPoint)
+		path += pDelta + ` `
+
+		minPoint = minPoints(minPoint, curPoint)
+		maxPoint = maxPoints(maxPoint, curPoint)
 
 		goLeft := generator.IsLeftTurn(step)
 		dir = dir.transform(goLeft)
 	}
 
-	return path
+	initialMove := `M ` + strconv.Itoa(int(-minPoint.x)) + ` ` + strconv.Itoa(int(-minPoint.y)) + ` `
+
+	return initialMove + path, maxPoint.x - minPoint.x, maxPoint.y - minPoint.y
 }
 
-func toPath(c Cardinal) string {
+func (s svgPathBuilder) nextPath(c Cardinal, curPoint point) (string, point) {
 
 	switch c {
 	case North:
-		return `v -` + delta
+		return `v -` + s.deltaStr, curPoint.v(-s.delta)
 	case East:
-		return `h ` + delta
+		return `h ` + s.deltaStr, curPoint.h(s.delta)
 	case South:
-		return `v ` + delta
+		return `v ` + s.deltaStr, curPoint.v(s.delta)
 	case West:
-		return `h -` + delta
+		return `h -` + s.deltaStr, curPoint.h(-s.delta)
 	}
-	return ``
+
+	return ``, curPoint
 }

@@ -77,14 +77,14 @@ func (w *FractalApp) setupRunCb() {
 		w.log(fmt.Sprintf("building path with %v steps...", nSteps))
 
 		// update the path
-		path := drawing.BuildPath(nSteps)
+		path, maxX, maxY := drawing.New(10).BuildPath(nSteps)
 
 		// find the svg and set the path
 		js.Global().Get("document").
 			Call("getElementById", "pathID").
 			Call("setAttribute", "d", path)
 
-		w.log(fmt.Sprintf("building path with %v steps...Complete!", nSteps))
+		w.log(fmt.Sprintf("building path with %v steps...Complete! (max X, Y: %d, %d)", nSteps, maxX, maxY))
 
 		return nil
 	})
