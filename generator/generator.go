@@ -1,5 +1,21 @@
 package generator
 
+// IsLeftTurn returns true if the next turn for the path is left-handed
+// n is the number of path segments we've currently walked
+// The first turn is left handed. So is the second.
+// And every time we have walked 2^x segments, we know we will make
+// a left-handed turn because that is how the fractal repeats itself.
+// Otherwise, we think of building the "next fold" as walking the previous fold
+// backwards. This means that we think of the value for `seg(n)` as the inverse
+// value of `seg(l - (n-l))` where `l` is the power of two < n. In other words,
+// `seg(n)` = `seg(g -n)` where `g` = 2^x > n > 2^(x-1) = `l`.
+//
+// This means that each call to `IsLeftTurn` won't have more than log2(n)
+// function calls on the stack. I chose this implementation because I wanted
+// to reduce the size of memory requiring to build a path. This means that
+// path building is a O(nlogn) algorithm. We could reduce the run-time complexity
+// of path building to O(n) by keeping a map of calculated values, but that
+// would require O(n) memory (instead of the currently required O(logn) ).
 func IsLeftTurn(n uint64) bool {
 	if isPowerOfTwo(n) {
 		return true
@@ -18,6 +34,12 @@ func isPowerOfTwo(n uint64) bool {
 	return (n & (n - 1)) == 0
 }
 
+// nextPowerOfTwo returns the next power of two
+// That is, this returns g = 2^x > n > 2^(x-1).
+// Since there will only be 64 powers of two max, we could potentially
+// speed this up by keeping the calculated slice of powers of two in memory
+// and just iterating that slice. However, that takes O(logn) time, and this takes
+// constant time O(1).
 func nextPowerOfTwo(n uint64) uint64 {
 	/*
 		This C answer is from http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
