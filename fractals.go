@@ -80,14 +80,6 @@ func (w *FractalApp) setupRunCb() {
 	})
 }
 
-func twoRaised(n uint64) uint64 {
-	res := uint64(1)
-	for i := uint64(1); i < n; i++ {
-		res *= 2
-	}
-	return res
-}
-
 func (w *FractalApp) rebuildDragon(n uint64) {
 	w.log(fmt.Sprintf("building path with 2^%v steps...", n))
 

@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	// arbitrary paddings chosen to have "some space" around the fractal on screen
 	paddingX = 5
 	paddingY = 5
 )
@@ -28,6 +29,8 @@ func New(delta int) PathBuilder {
 
 func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
 	var b strings.Builder
+	// 3 bytes for "v -" + length of the delta string + 1 byte for the following space
+	// times how many steps we'll take is a good approximation for the buffer's length
 	b.Grow((3 + len(s.deltaStr) + 1) * int(numSteps))
 
 	dir := East
@@ -37,22 +40,26 @@ func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
 	maxPoint := curPoint
 
 	for step := uint64(1); step <= numSteps; step++ {
-		curPoint = s.nextPath(&b, dir, curPoint)
+		curPoint = s.addToPathBuffer(&b, dir, curPoint)
 		fmt.Fprint(&b, ` `)
 
 		minPoint = minPoints(minPoint, curPoint)
 		maxPoint = maxPoints(maxPoint, curPoint)
 
 		goLeft := generator.IsLeftTurn(step)
-		dir = dir.transform(goLeft)
+		dir = dir.turn(goLeft)
 	}
 
-	initialMove := `M ` + strconv.Itoa(int(-minPoint.x)+paddingX) + ` ` + strconv.Itoa(int(-minPoint.y)+paddingY) + ` `
+	initialMove := fmt.Sprintf(`M %d %d`, int(-minPoint.x)+paddingX, int(-minPoint.y)+paddingY)
 
-	return initialMove + b.String(), maxPoint.x - minPoint.x + (2 * paddingX), maxPoint.y - minPoint.y + (2 * paddingY)
+	return initialMove + b.String(),
+		maxPoint.x - minPoint.x + (2 * paddingX),
+		maxPoint.y - minPoint.y + (2 * paddingY)
 }
 
-func (s svgPathBuilder) nextPath(b io.Writer, c Cardinal, curPoint point) point {
+// addToPathBuffer prints the next SVG command for the given Cardinal to the given writer.
+// Additionally, the next point on the map is returned based on the given current location.
+func (s svgPathBuilder) addToPathBuffer(b io.Writer, c Cardinal, curPoint point) point {
 
 	switch c {
 	case North:

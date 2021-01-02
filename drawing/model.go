@@ -10,7 +10,10 @@ const (
 	West    Cardinal = 4
 )
 
-func (c Cardinal) transform(goLeft bool) Cardinal {
+// turn returns the Cardinal associated with going left or not.
+// That is, if "goLeft" is called on a northernly facing person,
+// then west is returned
+func (c Cardinal) turn(goLeft bool) Cardinal {
 	if goLeft {
 		switch c {
 		case North:
