@@ -4,8 +4,14 @@ import (
 	"github.com/joshprzybyszewski/fractals/generator"
 )
 
-func buildPath(numSteps uint64) string {
-	path := `M 0 0 `
+const (
+	startX = `100`
+	startY = `100`
+	delta  = `10`
+)
+
+func BuildPath(numSteps uint64) string {
+	path := `M ` + startX + ` ` + startY + ` `
 	dir := East
 
 	for step := uint64(1); step <= numSteps; step++ {
@@ -19,15 +25,16 @@ func buildPath(numSteps uint64) string {
 }
 
 func toPath(c Cardinal) string {
+
 	switch c {
 	case North:
-		return `l 0 -1`
+		return `v -` + delta
 	case East:
-		return `l 1 0`
+		return `h ` + delta
 	case South:
-		return `l 0 1`
+		return `v ` + delta
 	case West:
-		return `l -1 0`
+		return `h -` + delta
 	}
 	return ``
 }

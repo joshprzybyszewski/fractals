@@ -1,11 +1,11 @@
-BINARY='fractal.wasm'
+BINARY='fractals.wasm'
 all: build
 
 build:
-	GOOS=js GOARCH=wasm go build -o ${BINARY} ./cmd/wonder
+	GOOS=js GOARCH=wasm go build -o ${BINARY} ./cmd/fractals
 
 build-prod:
-	GOOS=js GOARCH=wasm go build -o ${BINARY} -ldflags "-s -w" ./cmd/wonder
+	GOOS=js GOARCH=wasm go build -o ${BINARY} -ldflags "-s -w" ./cmd/fractals
 
 .PHONY: vendor
 vendor:

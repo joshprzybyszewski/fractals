@@ -3,22 +3,15 @@
 package fractals
 
 import (
-	"bytes"
-	"image"
+	"fmt"
 	"strconv"
 	"syscall/js"
-	"time"
 
-	"github.com/anthonynsimon/bild/imgio"
+	"github.com/joshprzybyszewski/fractals/drawing"
 )
 
 type FractalApp struct {
-	inBuf                   []uint8
-	outBuf                  bytes.Buffer
-	onImgLoadCb, shutdownCb js.Func
-	onProcessVideoStream    js.Func
-	colorViewCb             js.Func
-	sourceImg               image.Image
+	runCb, shutdownCb js.Func
 
 	console js.Value
 	done    chan struct{}
@@ -35,18 +28,13 @@ func New() *FractalApp {
 // Start sets up all the callbacks and waits for the close signal
 // to be sent from the browser.
 func (w *FractalApp) Start() {
-	// Setup callbacks
-	w.setupOnImgLoadCb()
-	w.setupProcessVideoStream()
-
-	js.Global().Set("loadImage", w.onImgLoadCb)
-	js.Global().Set("processVideoStream", w.onProcessVideoStream)
-
-	w.setupColorViewCb()
+	// Make sure the run button works
+	w.setupRunCb()
 	js.Global().Get("document").
-		Call("getElementById", "colorViewRadioForm").
-		Call("addEventListener", "change", w.colorViewCb)
+		Call("getElementById", "run").
+		Call("addEventListener", "click", w.runCb)
 
+	// Make sure the kill button works
 	w.setupShutdownCb()
 	js.Global().Get("document").
 		Call("getElementById", "close").
@@ -54,28 +42,8 @@ func (w *FractalApp) Start() {
 
 	<-w.done
 	w.log("Shutting down app")
-	w.onImgLoadCb.Release()
-	w.onProcessVideoStream.Release()
-	w.colorViewCb.Release()
+	w.runCb.Release()
 	w.shutdownCb.Release()
-}
-
-// updateImage writes the image to a byte buffer and then converts it to base64.
-// Then it sets the value to the src attribute of the target image.
-func (w *FractalApp) updateImage(img *image.RGBA, start time.Time) {
-	enc := imgio.JPEGEncoder(90)
-	err := enc(&w.outBuf, img)
-	if err != nil {
-		w.log(err.Error())
-		return
-	}
-
-	dst := js.Global().Get("Uint8Array").New(len(w.outBuf.Bytes()))
-	n := js.CopyBytesToJS(dst, w.outBuf.Bytes())
-	w.console.Call("log", "bytes copied:", strconv.Itoa(n))
-	js.Global().Call("displayImage", dst)
-	w.console.Call("log", "time taken:", time.Now().Sub(start).String())
-	w.outBuf.Reset()
 }
 
 // utility function to log a msg to the UI from inside a callback
@@ -88,6 +56,36 @@ func (w *FractalApp) log(msg string) {
 func (w *FractalApp) setupShutdownCb() {
 	w.shutdownCb = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		w.done <- struct{}{}
+		return nil
+	})
+}
+
+func (w *FractalApp) setupRunCb() {
+	w.runCb = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// Find out how many steps we'd like to generate
+		v := js.Global().Get("document").
+			Call("getElementById", "numSteps").
+			Get("value")
+
+		// TODO this likely isn't the best way to make this work
+		nStepsStr, err := strconv.Atoi(v.String())
+		if err != nil {
+			w.log(err.Error())
+			nStepsStr = 16
+		}
+		nSteps := uint64(nStepsStr)
+		w.log(fmt.Sprintf("building path with %v steps...", nSteps))
+
+		// update the path
+		path := drawing.BuildPath(nSteps)
+
+		// find the svg and set the path
+		js.Global().Get("document").
+			Call("getElementById", "pathID").
+			Call("setAttribute", "d", path)
+
+		w.log(fmt.Sprintf("building path with %v steps...Complete!", nSteps))
+
 		return nil
 	})
 }

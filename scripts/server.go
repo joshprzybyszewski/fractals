@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -15,6 +16,13 @@ func main() {
 	flag.Parse()
 	log.Printf("serving %q", *dir)
 	log.Printf("listening on %q...", *listen)
-	err := http.ListenAndServe(*listen, http.FileServer(http.Dir(*dir)))
+	fs := http.FileServer(http.Dir(*dir))
+	err := http.ListenAndServe(*listen, http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		resp.Header().Add("Cache-Control", "no-cache")
+		if strings.HasSuffix(req.URL.Path, ".wasm") {
+			resp.Header().Set("content-type", "application/wasm")
+		}
+		fs.ServeHTTP(resp, req)
+	}))
 	log.Fatal(err)
 }
