@@ -1,6 +1,6 @@
 package generator
 
-func isLeftTurn(n uint64) bool {
+func IsLeftTurn(n uint64) bool {
 	if isPowerOfTwo(n) {
 		return true
 	}
@@ -9,7 +9,7 @@ func isLeftTurn(n uint64) bool {
 	// such that g > n && g/2 < n
 	g := nextPowerOfTwo(n)
 
-	return !isLeftTurn(g - n)
+	return !IsLeftTurn(g - n)
 }
 
 func isPowerOfTwo(n uint64) bool {

@@ -38,16 +38,16 @@ func TestIsLeftTurn(t *testing.T) {
 	}}
 
 	for _, tc := range testCases {
-		actOutput := isLeftTurn(tc.input)
+		actOutput := IsLeftTurn(tc.input)
 		assert.Equal(t, tc.expOutput, actOutput, `received unexpected output for "%d"`, tc.input)
 	}
 
 	power := uint64(2)
 	for i := 0; i < 64; i++ {
 		power *= 2
-		assert.True(t, isLeftTurn(power), `every power of two should be a left turn (%d)`, power)
-		assert.False(t, isLeftTurn(power-1), `every number preceding a power of two should be a right turn (%d)`, power-1)
-		assert.True(t, isLeftTurn(power+1), `every number after a power of two should be a left turn (%d)`, power+1)
+		assert.True(t, IsLeftTurn(power), `every power of two should be a left turn (%d)`, power)
+		assert.False(t, IsLeftTurn(power-1), `every number preceding a power of two should be a right turn (%d)`, power-1)
+		assert.True(t, IsLeftTurn(power+1), `every number after a power of two should be a left turn (%d)`, power+1)
 	}
 }
 
