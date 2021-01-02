@@ -2,6 +2,10 @@
 
 fun weekend project regarding the dragon fractal
 
+### App
+
+<iframe src="./index.html"></iframe>
+
 ### Inspiration
 
 My brother recently asked what got me into programming. I remembered that one of my first personal programming projects was to build a fractal UI in Java (I'll have to go dig up that source code and add it here too). Since I've been programming for 7 years since then, I thought it would be a fun exercise to do that same project again with new tools.
