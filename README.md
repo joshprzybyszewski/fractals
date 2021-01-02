@@ -49,3 +49,12 @@ Early-ish in quarantine 2020, I had built another goWASM app called [wonder](git
 
 1. Get the latest wasm_exec.js file.
    - According to [this blog](https://www.sitepen.com/blog/compiling-go-to-webassembly), I should be able to copy from `$GOROOT/misc/wasm/wasm_exec.js`. And according to [this blog](https://medium.com/swlh/getting-started-with-webassembly-and-go-by-building-an-image-to-ascii-converter-dea10bdf71f6), I was able to find it with: `cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" .` in go1.15.
+
+### Run it yourself
+
+1. Clone this repo.
+1. `make vendor` for dependencies.
+1. `make build` for WASM output.
+1. `make serve` to stand up the simple file server locally.
+1. Navigate to http://localhost:3434
+1. Check it out!
