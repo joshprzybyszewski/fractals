@@ -40,6 +40,8 @@ func (w *FractalApp) Start() {
 		Call("getElementById", "close").
 		Call("addEventListener", "click", w.shutdownCb)
 
+	w.rebuildDragon(8192)
+
 	<-w.done
 	w.log("Shutting down app")
 	w.runCb.Release()
@@ -67,25 +69,34 @@ func (w *FractalApp) setupRunCb() {
 			Call("getElementById", "numSteps").
 			Get("value")
 
-		// TODO this likely isn't the best way to make this work
-		nStepsStr, err := strconv.Atoi(v.String())
+		// TODO I think there's a better way to get the value in an int for nSteps
+		nSteps, err := strconv.Atoi(v.String())
 		if err != nil {
 			w.log(err.Error())
-			nStepsStr = 16
+			nSteps = 16
 		}
-		nSteps := uint64(nStepsStr)
-		w.log(fmt.Sprintf("building path with %v steps...", nSteps))
-
-		// update the path
-		path, maxX, maxY := drawing.New(10).BuildPath(nSteps)
-
-		// find the svg and set the path
-		js.Global().Get("document").
-			Call("getElementById", "pathID").
-			Call("setAttribute", "d", path)
-
-		w.log(fmt.Sprintf("building path with %v steps...Complete! (max X, Y: %d, %d)", nSteps, maxX, maxY))
+		w.rebuildDragon(uint64(nSteps))
 
 		return nil
 	})
+}
+
+func (w *FractalApp) rebuildDragon(nSteps uint64) {
+	w.log(fmt.Sprintf("building path with %v steps...", nSteps))
+
+	// update the path
+	path, maxX, maxY := drawing.New(2).BuildPath(nSteps)
+
+	// find the svg and set the viewBox
+	vb := fmt.Sprintf("0 0 %d %d", int(maxX), int(maxY))
+	js.Global().Get("document").
+		Call("getElementById", "svgID").
+		Call("setAttribute", "viewBox", vb)
+
+	// find the svg and set the path
+	js.Global().Get("document").
+		Call("getElementById", "pathID").
+		Call("setAttribute", "d", path)
+
+	w.log(fmt.Sprintf("building path with %v steps...Complete!", nSteps))
 }

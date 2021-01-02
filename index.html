@@ -5,25 +5,21 @@
     <meta charset="utf-8">
     <title>Fractal App</title>
     <style>
+        .message {
+            border: 2px;
+            border-style: solid;
+            padding: 5px;
+            margin: 2px;
+        }
+
         .drawings {
-            /* display: flex; */
-            /* flex-wrap: wrap; */
-            justify-content: space-between;
-        }
-
-        .drawingcontainer {
-            overflow: scroll;
-        }
-
-        .fractal {
-            display: inline-block;
-            vertical-align: middle;
-            align-content: center;
-            overflow: visible;
+            height: 500px;
+            width: 500px;
         }
 
         .dragonfractal {
-            /* background-color: cornflowerblue; */
+            padding: 5px;
+            background-color: cornflowerblue;
         }
 
         .dragonfractal>.fractal>path {
@@ -31,28 +27,43 @@
             stroke: gold;
             stroke-width: 1;
             stroke-linejoin: round;
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+            animation: dash 15s ease-in-out alternate infinite;
+        }
+
+        @keyframes dash {
+            from {
+                stroke-dashoffset: 1;
+            }
+
+            to {
+                stroke-dashoffset: 0;
+            }
         }
     </style>
 </head>
 
 <body>
-    <input type="number" id="numSteps" min="0" />
-    <button id="run">Run</button>
-    <button id="close">Shutdown app</button>
-    <br />
+    <div class="allcontent">
+        <input type="number" id="numSteps" min="0" />
+        <button id="run">Run</button>
+        <button id="close">Shutdown app</button>
+        <div class="message">
+            <strong>
+                Message
+            </strong>
+            <div id="status"></div>
+        </div>
 
-    <div class="drawings" style="width: 500px; height: 500px;">
-        <div class="dragonfractal drawingcontainer">
-            <svg viewBox="0 0 200 200" class="fractal" xmlns="http://www.w3.org/2000/svg">
-                <path id="pathID" d="M 0 0 h 10 v -10 h -10 v -10 h -10 v 10 h -10 v -10" />
-            </svg>
+        <div class="drawings">
+            <div class="dragonfractal drawingcontainer">
+                <svg id="svgID" viewBox="0 0 100 100" class="fractal" xmlns="http://www.w3.org/2000/svg">
+                    <path id="pathID" pathLength="1" d="M 20 20 h 10 v -10 h -10 v -10 h -10 v 10 h -10 v -10" />
+                </svg>
+            </div>
         </div>
     </div>
-
-    <h3>
-        Debug
-    </h3>
-    <div id="status"></div>
 
 
     <script src="wasm_exec.js"></script>

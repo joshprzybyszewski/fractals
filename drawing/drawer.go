@@ -6,6 +6,11 @@ import (
 	"github.com/joshprzybyszewski/fractals/generator"
 )
 
+const (
+	paddingX = 5
+	paddingY = 5
+)
+
 type svgPathBuilder struct {
 	delta    int
 	deltaStr string
@@ -39,9 +44,9 @@ func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
 		dir = dir.transform(goLeft)
 	}
 
-	initialMove := `M ` + strconv.Itoa(int(-minPoint.x)) + ` ` + strconv.Itoa(int(-minPoint.y)) + ` `
+	initialMove := `M ` + strconv.Itoa(int(-minPoint.x)+paddingX) + ` ` + strconv.Itoa(int(-minPoint.y)+paddingY) + ` `
 
-	return initialMove + path, maxPoint.x - minPoint.x, maxPoint.y - minPoint.y
+	return initialMove + path, maxPoint.x - minPoint.x + (2 * paddingX), maxPoint.y - minPoint.y + (2 * paddingY)
 }
 
 func (s svgPathBuilder) nextPath(c Cardinal, curPoint point) (string, point) {
