@@ -12,7 +12,7 @@ My brother recently asked what got me into programming. I remembered that one of
 
 ### What it is
 
-This is called the "dragon fractal" (AKA the Jurassic Park fractal). You can google more about it (I found [this](https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/11069/versions/2/previews/html/dragon_curve.html#:~:text=The%20Dragon%20Curve%20is%20a,a%20novel%20by%20Michael%20Crichton.&text=The%20user%20is%20encouraged%20to,Number%20of%20fractal%20iterations) after building my own).
+This is called the "dragon fractal" (AKA the Jurassic Park fractal). You can google more about it (here's a [quick link](https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/11069/versions/2/previews/html/dragon_curve.html#:~:text=The%20Dragon%20Curve%20is%20a,a%20novel%20by%20Michael%20Crichton.&text=The%20user%20is%20encouraged%20to,Number%20of%20fractal%20iterations)). I've always been fascinated with this fractal because it's a model of folding a piece of paper in half "n" times and then unfolding it so that each crease is at 90 degrees. What's fascinating and unexpected is that the paper will never attempt to cross-over itself; instead it may meet at an intersection but then parts ways.
 
 ### How I built it
 
