@@ -19,6 +19,7 @@ func New(delta int) PathBuilder {
 }
 
 func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
+	// TODO come up with a better way to build a string
 	path := ``
 	dir := East
 
