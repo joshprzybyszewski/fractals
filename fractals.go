@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"syscall/js"
+	"time"
 
 	"github.com/joshprzybyszewski/fractals/drawing"
 )
@@ -81,13 +82,11 @@ func (w *FractalApp) setupRunCb() {
 }
 
 func (w *FractalApp) rebuildDragon(n uint64) {
+
 	w.log(fmt.Sprintf("building path with 2^%v steps...", n))
 
-	// update the path
-	path, maxX, maxY := drawing.New(2).BuildPath(twoRaised(n))
+	path, vb, dur := getPathAndViewBoxForDragon(n)
 
-	// find the svg and set the viewBox
-	vb := fmt.Sprintf("0 0 %d %d", int(maxX), int(maxY))
 	js.Global().Get("document").
 		Call("getElementById", "svgID").
 		Call("setAttribute", "viewBox", vb)
@@ -97,5 +96,18 @@ func (w *FractalApp) rebuildDragon(n uint64) {
 		Call("getElementById", "pathID").
 		Call("setAttribute", "d", path)
 
-	w.log(fmt.Sprintf("building path with 2^%v steps...Complete!", n))
+	w.log(fmt.Sprintf("building path with 2^%v steps...Completed in %s!", n, dur.String()))
+}
+
+func getPathAndViewBoxForDragon(n uint64) (string, string, time.Duration) {
+	t0 := time.Now()
+
+	// update the path
+	path, maxX, maxY := drawing.New(2).BuildPath(twoRaised(n))
+
+	// find the svg and set the viewBox
+	vb := fmt.Sprintf("0 0 %d %d", int(maxX), int(maxY))
+
+	dur := time.Since(t0)
+	return path, vb, dur
 }
