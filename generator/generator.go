@@ -1,5 +1,10 @@
 package generator
 
+var (
+	useCache      = false
+	leftTurnCache = make(map[uint64]bool)
+)
+
 // IsLeftTurn returns true if the next turn for the path is left-handed
 // n is the number of path segments we've currently walked
 // The first turn is left handed. So is the second.
@@ -16,7 +21,21 @@ package generator
 // path building is a O(nlogn) algorithm. We could reduce the run-time complexity
 // of path building to O(n) by keeping a map of calculated values, but that
 // would require O(n) memory (instead of the currently required O(logn) ).
-func IsLeftTurn(n uint64) bool {
+func IsLeftTurn(n uint64) (val bool) {
+
+	// As it turns out, benchmarks show that using a cache makes the func much slower
+	// at higher inputs of `n`. I suspect this is because the memory required
+	// to keep the cache isn't efficient to look-up from disk as compared to just
+	// recursing down a stack
+	if useCache {
+		if cachedVal, ok := leftTurnCache[n]; ok {
+			return cachedVal
+		}
+		defer func() {
+			leftTurnCache[n] = val
+		}()
+	}
+
 	if isPowerOfTwo(n) {
 		return true
 	}

@@ -33,8 +33,15 @@
 
 <body>
     <div class="allcontent">
-        <input type="number" id="numSteps" min="0" />
-        <button id="run">Run</button>
+        <div>
+            <input type="number" id="numSteps" min="0" />
+            <button id="run">Run</button>
+        </div>
+        <div>
+            <input type="number" id="benchmarkPower" min="1" />
+            <input type="number" id="benchmarkRepeats" min="1" />
+            <button id="runBenchmark">Run Benchmarks</button>
+        </div>
         <button id="close">Shutdown app</button>
         <div class="message">
             <strong>

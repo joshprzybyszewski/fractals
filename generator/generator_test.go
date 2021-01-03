@@ -7,6 +7,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func BenchmarkIsLeftTurn(b *testing.B) {
+	const minN = uint64(1) << 20
+	const maxN = minN + uint64(1)<<22
+	run := func() {
+		for n := minN; n < maxN; n++ {
+			_ = IsLeftTurn(n)
+		}
+	}
+
+	b.Run(`with cache`, func(b *testing.B) {
+		useCache = true
+		for i := 0; i < b.N; i++ {
+			run()
+		}
+	})
+
+	b.Run(`without cache`, func(b *testing.B) {
+		useCache = false
+		for i := 0; i < b.N; i++ {
+			run()
+		}
+	})
+}
+
 func TestIsLeftTurn(t *testing.T) {
 	testCases := []struct {
 		input     uint64

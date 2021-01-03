@@ -2,7 +2,6 @@ package drawing
 
 import (
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 
@@ -29,9 +28,9 @@ func New(delta int) PathBuilder {
 
 func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
 	var b strings.Builder
-	// 3 bytes for "v -" + length of the delta string + 1 byte for the following space
-	// times how many steps we'll take is a good approximation for the buffer's length
-	b.Grow((3 + len(s.deltaStr) + 1) * int(numSteps))
+	// (2 bytes for "v-" + length of the delta string) * how many
+	// steps we'll take is a good approximation for the buffer's length
+	b.Grow((2 + len(s.deltaStr)) * int(numSteps))
 
 	dir := East
 
@@ -41,44 +40,51 @@ func (s svgPathBuilder) BuildPath(numSteps uint64) (string, int64, int64) {
 
 	for step := uint64(1); step <= numSteps; step++ {
 		curPoint = s.addToPathBuffer(&b, dir, curPoint)
-		fmt.Fprint(&b, ` `)
 
-		minPoint = minPoints(minPoint, curPoint)
-		maxPoint = maxPoints(maxPoint, curPoint)
+		checkForLess(&minPoint, curPoint)
+		checkForGreater(&maxPoint, curPoint)
 
-		goLeft := generator.IsLeftTurn(step)
-		dir = dir.turn(goLeft)
+		moveDir(&dir, generator.IsLeftTurn(step))
 	}
 
-	initialMove := fmt.Sprintf(`M %d %d`, int(-minPoint.x)+paddingX, int(-minPoint.y)+paddingY)
+	startX := -minPoint.x + paddingX
+	startY := -minPoint.y + paddingY
+	initialMove := fmt.Sprintf(
+		`M %d %d `,
+		startX,
+		startY,
+	)
 
 	return initialMove + b.String(),
-		maxPoint.x - minPoint.x + (2 * paddingX),
-		maxPoint.y - minPoint.y + (2 * paddingY)
+		int64(startX) + maxPoint.x + paddingX,
+		int64(startY) + maxPoint.y + paddingY
 }
 
 // addToPathBuffer prints the next SVG command for the given Cardinal to the given writer.
 // Additionally, the next point on the map is returned based on the given current location.
-func (s svgPathBuilder) addToPathBuffer(b io.Writer, c Cardinal, curPoint point) point {
+func (s svgPathBuilder) addToPathBuffer(b *strings.Builder, c Cardinal, curPoint point) point {
+	defer b.WriteString(s.deltaStr)
 
 	switch c {
 	case North:
-		fmt.Fprint(b, `v -`)
-		fmt.Fprint(b, s.deltaStr)
+		b.WriteString(`v-`)
+
 		return curPoint.v(-s.delta)
 	case East:
-		fmt.Fprint(b, `h `)
-		fmt.Fprint(b, s.deltaStr)
+		b.WriteString(`h`)
+
 		return curPoint.h(s.delta)
 	case South:
-		fmt.Fprint(b, `v `)
-		fmt.Fprint(b, s.deltaStr)
+		b.WriteString(`v`)
+
 		return curPoint.v(s.delta)
 	case West:
-		fmt.Fprint(b, `h -`)
-		fmt.Fprint(b, s.deltaStr)
-		return curPoint.h(-s.delta)
-	}
+		b.WriteString(`h-`)
 
-	return curPoint
+		return curPoint.h(-s.delta)
+
+	default:
+		// This is actually an error case
+		return point{}
+	}
 }

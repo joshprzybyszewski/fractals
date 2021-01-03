@@ -1,6 +1,7 @@
 package fractals
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,4 +22,17 @@ func TestTwoRaised(t *testing.T) {
 	assert.NotEqual(t, uint64(0), twoRaised(63))
 	assert.Equal(t, uint64(0), twoRaised(64))
 	assert.Equal(t, uint64(0), twoRaised(65))
+}
+
+func BenchmarkGetPathAndViewBoxForDragon(b *testing.B) {
+	const minPower = uint64(20)
+	const maxPower = uint64(22)
+	for n := minPower; n <= maxPower; n++ {
+		b.Run(fmt.Sprintf("%d", n), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_, _ = getPathAndViewBoxForDragon(n)
+			}
+		})
+	}
+
 }

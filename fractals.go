@@ -7,12 +7,10 @@ import (
 	"strconv"
 	"syscall/js"
 	"time"
-
-	"github.com/joshprzybyszewski/fractals/drawing"
 )
 
 type FractalApp struct {
-	runCb, shutdownCb js.Func
+	runCb, runBenchmarkCb, shutdownCb js.Func
 
 	console js.Value
 	done    chan struct{}
@@ -35,6 +33,12 @@ func (w *FractalApp) Start() {
 		Call("getElementById", "run").
 		Call("addEventListener", "click", w.runCb)
 
+	// Make sure we can run benchmarks
+	w.setupRunBenchmarkCb()
+	js.Global().Get("document").
+		Call("getElementById", "runBenchmark").
+		Call("addEventListener", "click", w.runBenchmarkCb)
+
 	// Make sure the kill button works
 	w.setupShutdownCb()
 	js.Global().Get("document").
@@ -46,6 +50,7 @@ func (w *FractalApp) Start() {
 	<-w.done
 	w.log("Shutting down app")
 	w.runCb.Release()
+	w.runBenchmarkCb.Release()
 	w.shutdownCb.Release()
 }
 
@@ -54,6 +59,10 @@ func (w *FractalApp) log(msg string) {
 	js.Global().Get("document").
 		Call("getElementById", "status").
 		Set("innerText", msg)
+}
+
+func (w *FractalApp) consoleLog(str string) {
+	w.console.Call("log", str)
 }
 
 func (w *FractalApp) setupShutdownCb() {
@@ -81,11 +90,39 @@ func (w *FractalApp) setupRunCb() {
 	})
 }
 
+func (w *FractalApp) setupRunBenchmarkCb() {
+	w.runBenchmarkCb = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		v := js.Global().Get("document").
+			Call("getElementById", "benchmarkPower").
+			Get("value")
+
+		power, err := strconv.Atoi(v.String())
+		if err != nil {
+			w.log(err.Error())
+			power = 4
+		}
+
+		v = js.Global().Get("document").
+			Call("getElementById", "benchmarkRepeats").
+			Get("value")
+
+		numRepeats, err := strconv.Atoi(v.String())
+		if err != nil {
+			w.log(err.Error())
+			numRepeats = 5
+		}
+		w.log(`running benchmarks (check console)`)
+		w.runBenchmarks(uint64(power), numRepeats)
+
+		return nil
+	})
+}
+
 func (w *FractalApp) rebuildDragon(n uint64) {
 
 	w.log(fmt.Sprintf("building path with 2^%v steps...", n))
 
-	path, vb, dur := getPathAndViewBoxForDragon(n)
+	path, vb, dur := getPathAndViewBoxForDragonWithDuration(n)
 
 	js.Global().Get("document").
 		Call("getElementById", "svgID").
@@ -99,15 +136,18 @@ func (w *FractalApp) rebuildDragon(n uint64) {
 	w.log(fmt.Sprintf("building path with 2^%v steps...Completed in %s!", n, dur.String()))
 }
 
-func getPathAndViewBoxForDragon(n uint64) (string, string, time.Duration) {
+func getPathAndViewBoxForDragonWithDuration(n uint64) (string, string, time.Duration) {
 	t0 := time.Now()
+	path, vb := getPathAndViewBoxForDragon(n)
 
-	// update the path
-	path, maxX, maxY := drawing.New(2).BuildPath(twoRaised(n))
+	return path, vb, time.Since(t0)
+}
 
-	// find the svg and set the viewBox
-	vb := fmt.Sprintf("0 0 %d %d", int(maxX), int(maxY))
-
-	dur := time.Since(t0)
-	return path, vb, dur
+func (w *FractalApp) runBenchmarks(maxPower uint64, numRepeats int) {
+	for power := maxPower; power > 0; power -= 1 {
+		for i := 0; i < numRepeats; i++ {
+			_, _, dur := getPathAndViewBoxForDragonWithDuration(power)
+			w.consoleLog(fmt.Sprintf("power = %d; avgDur = %s\n", power, dur.String()))
+		}
+	}
 }
